@@ -1,57 +1,68 @@
 import React, { Component } from 'react';
 import { StyleSheet, Text, View, TextInput, ScrollView, Button } from 'react-native';
-import fire from './firebase';
+import database from './firebase';
+import RoleView from './RoleView';
 
 export default class App extends React.Component {
   constructor(props) {
     super(props);
 
     this.state = { 
-      messages: [],
-      userMessage: ''                 
+      pageTitle:  "2R1B",
+      roomCodeQuery: "",
+      authenticatedRoomCode: "None",
+      roles: []                 
     };
   }
 
-  componentWillMount() {
-    let messagesRef = fire.database().ref('messages').orderByKey().limitToLast(100);
-    messagesRef.on('child_added', snapshot => {
-      let message = { key: snapshot.val(), id: snapshot.key };
-      this.setState({ messages: [message].concat(this.state.messages) });
-    })
+  componentDidMount() {
+    database.syncState('rooms', {
+      context: this,
+      state: 'rooms',
+      asArray: true
+    });
+
+    database.syncState('roles', {
+      context: this,
+      state: 'roles',
+      asArray: true
+    });
   }
 
-  addMessage() {
-    fire.database().ref('messages').push( this.state.userMessage );
-    this.state.userMessage = '';
-    this.state.messages = fire.database().ref('messages').orderByKey().limitToLast(100);
+  queryJoinRoom() {
+    this.state.rooms.map((room) => {
+      console.warn(room.roomCode);
+    });
   }
 
   render() {
+    var rolesList = this.state.roles.map((role) => {
+            return <RoleView displayName={role.displayName} key={role.displayName}/>;
+    });
+
     return (
       <View style={styles.container}>
+        <Text style={styles.pageTitle}>{this.state.pageTitle}</Text>
         <View>
           <TextInput 
-            style={{height: 60, width: 200, borderColor: 'gray', borderWidth: 1}}
-            onChangeText={(userMessage) => this.setState({userMessage})} 
-            value={this.state.userMessage}
+            style={{height: 60, width: 200, borderColor: 'gray', borderWidth: 1, textAlign: 'center'}}
+            onChangeText={(roomCodeQuery) => this.setState({roomCodeQuery})}
+            placeholder="Room Code" 
+            value={this.state.roomCodeQuery}
           />
         </View>
-        <View>
+        <View style={styles.buttonContainer}>
           <Button
-            onPress={() => this.addMessage()}
-            title="Submit"
-            color="#841584"
-            accessibilityLabel="Submit your message to the database"
+            onPress={() => this.queryJoinRoom()}
+            title="Join Room"
+            accessibilityLabel="Join the specified room"
+            style={styles.buttonStyle}
           />
         </View>
-        <ScrollView>
-          {
-            this.state.messages.map((item, index) => (
-                <View key = {item.id} style = {styles.listView}>
-                  <Text>{item.key}</Text>
-                </View>
-              ))
-          }
+        <ScrollView style={{maxHeight: 200}}>
+        {
+          rolesList
+        }
         </ScrollView>
       </View>
 
@@ -63,9 +74,14 @@ const styles = StyleSheet.create({
 
   container: {
     flex: 1,
-    flexDirection: 'column',
     justifyContent: 'center',
     alignItems: 'center'
+  },
+  buttonContainer: {
+    margin: 20
+  },
+  buttonStyle: {
+    backgroundColor: '#1E6738'
   },
   listView: {
    flex: 1,
@@ -76,6 +92,17 @@ const styles = StyleSheet.create({
     flex: 1,
     textAlign: 'center',
     justifyContent: 'center'
-  } 
+  },
+  scrollView: {
+    maxHeight: 100
+  },
+  baseText: {
+    fontFamily: 'Cochin',
+  },
+  pageTitle: {
+    fontSize: 72,
+    fontWeight: 'bold',
+    textAlign: 'center',
+  },
 
 });

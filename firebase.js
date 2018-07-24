@@ -1,4 +1,5 @@
-import firebase from 'firebase'
+import Rebase from 're-base';
+import firebase from 'firebase';
 
 var config = {
   apiKey: "AIzaSyCEEKhTO6xSu3CS6C4Lm9Kp4ZwxTwTFdnw",
@@ -10,5 +11,7 @@ var config = {
 };
 
 var fire = firebase.initializeApp(config);
+var firebaseDatabase = firebase.database(fire);
+var database = Rebase.createClass(firebaseDatabase);
 
-export default fire;
+export default database;
